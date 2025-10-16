@@ -1,0 +1,171 @@
+local TextChatService = game:GetService("TextChatService")
+local Players = game:GetService("Players")
+local channel = TextChatService.TextChannels.RBXGeneral
+local Player = Players.LocalPlayer
+
+local lastMessageTime = 0
+local MESSAGE_COOLDOWN = 2
+
+channel:SendAsync("🌟StanHubBotです。開発者:Hackv2,BGHackers🌟")
+
+-- ===== プレイヤー関連機能 5つ =====
+local function GetPlayerInfo(player)
+    return {
+        Name = player.Name,
+        DisplayName = player.DisplayName,
+        Position = player.Character and player.Character.PrimaryPart and player.Character.PrimaryPart.Position or "不明",
+        Health = player.Character and player.Character:FindFirstChild("Humanoid") and player.Character.Humanoid.Health or "不明",
+        Team = player.Team and player.Team.Name or "なし"
+    }
+end
+
+-- ===== コマンド定義（20種類以上） =====
+local Commands = {}
+
+Commands["!help"] = function()
+    channel:SendAsync("使用可能コマンド: !help, !time, !math, !me, !pos, !hp, !team, !players, !whois, !random, !shout, !whisper, !say, !joke, !weather, !roll, !flip, !emoji, !color, !mute, !unmute")
+end
+
+Commands["!time"] = function()
+    channel:SendAsync("現在のサーバー時刻: "..os.date("%H:%M:%S"))
+end
+
+Commands["!math"] = function(msg)
+    local expr = msg:match("!math (.+)")
+    if expr then
+        local success, result = pcall(function() return load("return "..expr)() end)
+        if success then
+            channel:SendAsync("計算結果: "..tostring(result))
+        else
+            channel:SendAsync("計算エラーです")
+        end
+    end
+end
+
+Commands["!me"] = function()
+    channel:SendAsync("あなたの名前: "..Player.Name.." 表示名: "..Player.DisplayName)
+end
+
+Commands["!pos"] = function()
+    local pos = Player.Character and Player.Character.PrimaryPart and Player.Character.PrimaryPart.Position or "不明"
+    channel:SendAsync("あなたの座標: "..tostring(pos))
+end
+
+Commands["!hp"] = function()
+    local hp = Player.Character and Player.Character:FindFirstChild("Humanoid") and Player.Character.Humanoid.Health or "不明"
+    channel:SendAsync("あなたのHP: "..tostring(hp))
+end
+
+Commands["!team"] = function()
+    local teamName = Player.Team and Player.Team.Name or "なし"
+    channel:SendAsync("あなたのチーム: "..teamName)
+end
+
+Commands["!players"] = function()
+    local list = ""
+    for _, p in pairs(Players:GetPlayers()) do
+        list = list..p.Name..", "
+    end
+    channel:SendAsync("プレイヤー一覧: "..list)
+end
+
+Commands["!whois"] = function(msg)
+    local name = msg:match("!whois (.+)")
+    if name then
+        local target = Players:FindFirstChild(name)
+        if target then
+            local info = GetPlayerInfo(target)
+            channel:SendAsync("情報: 名前:"..info.Name.." 表示名:"..info.DisplayName.." HP:"..info.Health.." チーム:"..info.Team.." 座標:"..tostring(info.Position))
+        else
+            channel:SendAsync("プレイヤーが見つかりません")
+        end
+    end
+end
+
+Commands["!random"] = function()
+    channel:SendAsync("ランダム数字: "..math.random(1,100))
+end
+
+Commands["!shout"] = function(msg)
+    local text = msg:match("!shout (.+)")
+    if text then
+        channel:SendAsync("📢 "..text:upper())
+    end
+end
+
+Commands["!whisper"] = function(msg)
+    local text, targetName = msg:match("!whisper (.+) (.+)")
+    if text and targetName then
+        local target = Players:FindFirstChild(targetName)
+        if target then
+            channel:SendAsync("🤫 (to "..targetName..") "..text)
+        else
+            channel:SendAsync("プレイヤーが見つかりません")
+        end
+    end
+end
+
+Commands["!say"] = function(msg)
+    local text = msg:match("!say (.+)")
+    if text then
+        channel:SendAsync(text)
+    end
+end
+
+Commands["!joke"] = function()
+    local jokes = {
+        "猫がパソコンで何をする？ニャートブック！",
+        "お寿司が好きな数学者は？シャリ・ピタゴラス！",
+        "カエルが本を読むと？ケロケロ学習！"
+    }
+    channel:SendAsync(jokes[math.random(1,#jokes)])
+end
+
+Commands["!weather"] = function()
+    channel:SendAsync("今日の天気は晴れです☀️（デモ用）")
+end
+
+Commands["!roll"] = function()
+    channel:SendAsync("サイコロの結果: "..math.random(1,6))
+end
+
+Commands["!flip"] = function()
+    local res = math.random() < 0.5 and "表" or "裏"
+    channel:SendAsync("コインの結果: "..res)
+end
+
+Commands["!emoji"] = function()
+    local emojis = {"😄","😎","🤖","🎉","💥"}
+    channel:SendAsync("ランダム絵文字: "..emojis[math.random(1,#emojis)])
+end
+
+Commands["!color"] = function()
+    local colors = {"赤","青","緑","黄","紫"}
+    channel:SendAsync("ランダム色: "..colors[math.random(1,#colors)])
+end
+
+Commands["!mute"] = function()
+    channel:SendAsync("ミュート機能はデモ用です")
+end
+
+Commands["!unmute"] = function()
+    channel:SendAsync("ミュート解除機能はデモ用です")
+end
+
+-- ===== メッセージ受信処理 =====
+TextChatService.OnIncomingMessage = function(msgObj)
+    local msg = msgObj.Text
+    local currentTime = os.time()
+    if currentTime - lastMessageTime < MESSAGE_COOLDOWN then
+        return
+    end
+    lastMessageTime = currentTime
+
+    for cmd, func in pairs(Commands) do
+        if msg:sub(1, #cmd) == cmd then
+            func(msg)
+            return
+        end
+    end
+print("LALOL Hub Ontop!! Discord-<BGHackers")
+    end
